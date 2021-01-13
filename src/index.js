@@ -16,7 +16,7 @@ const TOKEN = process.env?.TOKEN ?? ''
  * @param {string} guildId The guild id.
  *                         (See https://discord.com/developers/docs/resources/guild).
  *
- * @return {[{id, name}]} The list of emojis
+ * @return {Promise<[{id: string, name: string}]>} The list of emojis
  *                (See https://discord.com/developers/docs/resources/emoji).
  */
 async function listEmojis(guildId) {
@@ -53,7 +53,6 @@ function toEmojiUrl(emojiId) {
   return `https://cdn.discordapp.com/emojis/${emojiId}.png?v=1`
 }
 
-
 // Main function
 
 ;(async () => {
@@ -65,12 +64,19 @@ function toEmojiUrl(emojiId) {
 
   // Map emoji to image URLs, then download from each URL
 
+  const transformEmojiToRecord = ({ id, name }) => ({
+    name: name,
+    url: toEmojiUrl(id)
+  })
+
+  const downloadAndBackupEmoji = async ({ name, url }) => {
+    fs.writeFileSync(
+      path.join('.', BACKUP_FOLDER_NAME, `${name}.png`),
+      await download(url)
+    )
+  }
+
   ;(await listEmojis(GUILD_ID))
-    .map(({ id, name }) => ({ name: name, url: toEmojiUrl(id) }))
-    .forEach(async ({ name, url }) => {
-      fs.writeFileSync(
-        path.join('.', BACKUP_FOLDER_NAME, `${name}.png`),
-        await download(url)
-      )
-    })
+    .map(transformEmojiToRecord)
+    .forEach(downloadAndBackupEmoji)
 })()

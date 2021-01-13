@@ -1,6 +1,6 @@
 {
   "name": "discord-emoji-backup",
-  "version": "1.1.0",
+  "version": "2",
   "main": "./src/index.js",
   "scripts": {
     "start": "node ."
